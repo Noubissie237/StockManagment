@@ -19,6 +19,10 @@ class CommandeArticleModelAdmin(admin.ModelAdmin):
 class AddressChippingModelAdmin(admin.ModelAdmin):
     list_display = ('client', 'commande', 'addresse', 'ville', 'zipcode', 'date_ajout')      
 
+class prescriptionAdmin(admin.ModelAdmin):
+    list_display = ('nom', 'prenom', 'age', 'sexe', 'email', 'antecedent','prescription1', 'prescription2', 'prescription3')
+
+
 
 admin.site.register(Client, ClientModelAdmin)
 admin.site.register(Produit, ProduitModelAdmin)
@@ -26,6 +30,7 @@ admin.site.register(Category, CategoryModelAdmin)
 admin.site.register(Commande, CommandeModelAdmin)
 admin.site.register(CommandeArticle, CommandeArticleModelAdmin)
 admin.site.register(AddressChipping, AddressChippingModelAdmin)
+admin.site.register(Prescription, prescriptionAdmin)
 
 admin.site.site_title = "Pharmacie Administration"
 admin.site.site_header = "Pharmacie Administration"

@@ -1,12 +1,15 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 import json
 from .models import *
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from .utils import panier_cookie, data_cookie
+from .forms import LoginForm
+from django.contrib.auth import authenticate, login, logout
 
-# Create your views here.
+
+@login_required(login_url='/login')
 def shop(request, *args, **kwargs):
     """Vue des produits"""
 
@@ -24,7 +27,7 @@ def shop(request, *args, **kwargs):
 
     return render(request, 'shop/index.html', context)
 
-
+@login_required(login_url='/login')
 def panier(request, *args, **kwargs):
 
     data = data_cookie(request)
@@ -41,7 +44,7 @@ def panier(request, *args, **kwargs):
 
     return render(request, 'shop/panier.html', context)
 
-
+@login_required(login_url='/login')
 def commande(request, *args, **kwargs):
 
     data = data_cookie(request)
@@ -57,7 +60,7 @@ def commande(request, *args, **kwargs):
 
     return render(request, 'shop/commande.html', context)
 
-@login_required()
+@login_required(login_url='/login')
 def update_article(request, *args, **kwargs):
 
     data = json.loads(request.body)
@@ -85,7 +88,7 @@ def update_article(request, *args, **kwargs):
     
     return JsonResponse("panier modifié", safe=False)
 
-
+@login_required(login_url='/login')
 def commandeAnonyme(request, data):
     name = data['form']['name']
     username = data['form']['username']
@@ -116,10 +119,11 @@ def commandeAnonyme(request, data):
 
         return client, commande
 
-
+@login_required(login_url='/login')
 def traitement_commande(request, *args, **kwargs):
 
     data = json.loads(request.body)
+
 
     transaction_id = datetime.now().timestamp()
 
@@ -150,5 +154,26 @@ def traitement_commande(request, *args, **kwargs):
             zipcode=data['shipping']['zipcode']
         )
 
-
     return JsonResponse("Traitement complet", safe=False)
+
+
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return render(request, 'shop/panier.html', context={'name' : request.user.username})
+            else:
+                form.add_error(None, "Nom d'utilisateur ou mot de passe incorrect.")
+    else:
+        form = LoginForm()
+    return render(request, 'registration/login.html', {'form': form})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('/login')
