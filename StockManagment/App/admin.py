@@ -8,7 +8,7 @@ class CategoryModelAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
 
 class ProduitModelAdmin(admin.ModelAdmin):
-    list_display = ('categorie', 'name', 'price', 'digital', 'quantite', 'date_ajout')    
+    list_display = ('categorie', 'name', 'price', 'digital', 'nombre', 'date_ajout')    
 
 class CommandeModelAdmin(admin.ModelAdmin):
     list_display = ('client', 'complete', 'status', 'total_trans', 'transaction_id', 'date_commande')    

@@ -1,22 +1,24 @@
 from django.shortcuts import render
-
-# Create your views here.
-from django.shortcuts import render
-from .models import *
 from django.http import JsonResponse
 import json
+from .models import *
+from django.contrib.auth.decorators import login_required
 from datetime import datetime
-from .utils import commandeAnonyme, data_cookie, panier_cookie
+from .utils import panier_cookie, data_cookie
 
+# Create your views here.
 def shop(request, *args, **kwargs):
-    """ vue principale """
+    """Vue des produits"""
 
     produits = Produit.objects.all()
+
     data = data_cookie(request)
+    articles = data['articles']
+    commande = data['commande']
     nombre_article = data['nombre_article']
 
     context = {
-        'produits':produits,
+        'produits': produits,
         'nombre_article': nombre_article
     }
 
@@ -24,24 +26,23 @@ def shop(request, *args, **kwargs):
 
 
 def panier(request, *args, **kwargs):
-    """ panier """
-    
+
     data = data_cookie(request)
     articles = data['articles']
     commande = data['commande']
     nombre_article = data['nombre_article']
 
+
     context = {
-        'articles':articles,
-        'commande':commande,
-        'nombre_article':nombre_article
+        'articles' : articles, 
+        'commande': commande,
+        'nombre_article': nombre_article
     }
 
     return render(request, 'shop/panier.html', context)
 
 
 def commande(request, *args, **kwargs):
-    """ Commande """
 
     data = data_cookie(request)
     articles = data['articles']
@@ -49,103 +50,105 @@ def commande(request, *args, **kwargs):
     nombre_article = data['nombre_article']
 
     context = {
-        'articles':articles,
-        'commande':commande,
+        'articles' : articles, 
+        'commande': commande,
         'nombre_article': nombre_article
     }
 
-    return render(request, 'shop/commande.html', context)    
+    return render(request, 'shop/commande.html', context)
 
-
-
+@login_required()
 def update_article(request, *args, **kwargs):
 
     data = json.loads(request.body)
-
     produit_id = data['produit_id']
-
     action = data['action']
+    
+    produit = Produit.objects.get(id=produit_id)
 
     client = request.user.client
-
-    produit = Produit.objects.get(id=produit_id)
 
     commande, created = Commande.objects.get_or_create(client=client, complete=False)
 
     commande_article, created = CommandeArticle.objects.get_or_create(commande=commande, produit=produit)
 
-    if action == 'add':
-
+    if action == "add":
         commande_article.quantite += 1
-
-    if action == 'remove':
-
-        commande_article.quantite -= 1
+    
+    if action == "remove":
+        commande_article.quantite -=1
 
     commande_article.save()
 
-    if  commande_article.quantite <= 0:
-
-        commande_article.delete()        
-
-    return JsonResponse("Article ajouté", safe=False)
-
-
-def traitementCommande(request, *args, **kwargs):
-    """ traitement,  validation de la com;ande  et verification de l'integrite des donnees(detection de fraude)"""
-
-    STATUS_TRANSACTION = ['ACCEPTED', 'COMPLETED', 'SUCESS']
+    if commande_article.quantite <= 0:
+        commande_article.delete()
     
-    transaction_id = datetime.now().timestamp()
+    return JsonResponse("panier modifié", safe=False)
+
+
+def commandeAnonyme(request, data):
+    name = data['form']['name']
+    username = data['form']['username']
+    email = data['form']['email']
+    phone = data['form']['phone']
+
+    cookie_panier = panier_cookie(request)
+
+    articles = cookie_panier['articles']
+    client, created = Client.objects.get_or_create(
+        email=email
+    )
+
+    client.name = name
+    client.save()
+
+    commande = Commande.objects.create(
+        client=client
+    )
+
+    for article in articles:
+        produit = Produit.objects.get(id=article['produit']['pk'])
+        CommandeArticle.objects.create(
+            produit=produit,
+            commande=commande,
+            quantite=article['quantite']
+        )
+
+        return client, commande
+
+
+def traitement_commande(request, *args, **kwargs):
 
     data = json.loads(request.body)
 
-    print(data)
+    transaction_id = datetime.now().timestamp()
 
     if request.user.is_authenticated:
 
         client = request.user.client
 
         commande, created = Commande.objects.get_or_create(client=client, complete=False)
-
-
+        
     else:
         client, commande = commandeAnonyme(request, data)
 
     total = float(data['form']['total'])
 
-    commande.transaction_id = data['payment_info']['transaction_id']
-
-    commande.total_trans = total
+    commande.transaction_id = transaction_id
 
     if commande.get_panier_total == total:
-
         commande.complete = True
-        commande.status = data['payment_info']['status']
 
-    else:
-        commande.status = "REFUSED"
-        commande.save()
-        
-        return JsonResponse("Attention!!! Traitement Refuse Fraude detecte!", safe=False)
-
-    commande.save()    
-    
-    if not commande.status in STATUS_TRANSACTION:
-        return JsonResponse("Désolé, le paiement a échoué, veuillez réessayer")    
-
-  
+    commande.save()
 
     if commande.produit_physique:
-
         AddressChipping.objects.create(
             client=client,
             commande=commande,
-            addresse = data['shipping']['address'],
+            addresse=data['shipping']['address'],
             ville=data['shipping']['city'],
             zipcode=data['shipping']['zipcode']
         )
 
 
-
-    return JsonResponse("Votre paiement a été effectué avec succès, vous recevrez votre commande dans un instant !", safe=False)
+    return JsonResponse("Traitement complet", safe=False)

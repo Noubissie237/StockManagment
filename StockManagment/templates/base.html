@@ -7,21 +7,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
-        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-        crossorigin="anonymous"></script>
+    <link rel="shortcut icon" href="{% static 'images/logo.png' %}" type="image/x-icon">
     <title>PHARMACIE DE L'HOPITAL</title>
 
-    <script defer type="text/javascript">
+    <script type="text/javascript">
+        var user = "{{request.user}}";
 
-        user = '{{ request.user }}'
-  
         function getToken(name) {
             var cookieValue = null;
             if (document.cookie && document.cookie != '') {
                 var cookies = document.cookie.split(';');
                 for (var i = 0; i < cookies.length; i++) {
-                    var cookie = jQuery.trim(cookies[i]);
+                    var cookie = cookies[i].trim();
                     // Does this cookie string begin with the name we want?
                     if (cookie.substring(0, name.length + 1) == (name + '=')) {
                         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
@@ -32,45 +29,41 @@
             return cookieValue;
         }
         var csrftoken = getToken('csrftoken');
-  
-  
-        function getCookie(name){
-          var cookieArr = document.cookie.split(";");
-  
-          // Loop through the array elements
-          for(var i = 0; i < cookieArr.length; i++) {
-            var cookiePair = cookieArr[i].split("=");
-  
-            /* Removing whitespace at the beginning of the cookie name
-            and compare i with the given string */
-            if(name==cookiePair[0].trim()){
-              // Decode the cookie value and return
-              return decodeURIComponent(cookiePair[1]);
+
+        // Cookies------------------------------------------------------------
+
+        function getCookie(name) {
+            var cookieArr = document.cookie.split(";");
+            // Loop through the array elements
+            for (var i = 0; i < cookieArr.length; i++) {
+                var cookiePair = cookieArr[i].split("=");
+                /* Removing whitespace at the beginning of the cookie name
+                and compare i with the given string */
+                if (name == cookiePair[0].trim()) {
+                    // Decode the cookie value and return
+                    return decodeURIComponent(cookiePair[1]);
+                }
             }
-          }
-  
-          // Return null if not found
-          return null;
+            // Return null if not found
+            return null;
         }
-  
         var panier = JSON.parse(getCookie('panier'));
-  
-        if( panier == undefined){
-          panier = {};
-          console.log("panier cree");
-          document.cookie = "panier=" + JSON.stringify(panier) + ";domain=;path=/";
+
+        if (panier == undefined) {
+            panier = {};
+            console.log("panier cree");
+            document.cookie = "panier=" + JSON.stringify(panier) + ";domain=;path=/";
         }
-  
         console.log('panier', panier);
-  
-      </script>
+
+    </script>
 </head>
 
 <body>
     <!-- Debut Navbar -->
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">MyShop</a>
+            <a class="navbar-brand" href="/">LA PHARMACIE</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                 aria-label="Toggle navigation">
@@ -79,26 +72,12 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/">Boutique</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            Catégories
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Action</a></li>
-                            <li><a class="dropdown-item" href="#">Another action</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="#">Something else here</a></li>
-                        </ul>
+                        <a class="nav-link active" aria-current="page" href="/">Accueil</a>
                     </li>
                 </ul>
                 <div class="form-inline my-2 my-lg-0">
                     {{request.user}}
-                    <a href="#" class="btn btn-warning">Connexion</a>
+                    <a href="#" class="btn btn-danger">Déconnexion</a>
                     <a href="/panier" style="text-decoration: none;">
                         <img id="icon-panier" src="{% static 'images/panier.png'%}" alt="panier">
                     </a>

@@ -1,17 +1,15 @@
 from django.db import models
-
-from django.contrib.auth.models import User 
-
+from django.contrib.auth.models import User
 from django.utils import timezone
 
-
 class Client(models.Model):
-    user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE, related_name='client')
+    user = models.OneToOneField(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='client')
     name = models.CharField(max_length=100, null=True)
     email = models.EmailField(max_length=200, null=True)
 
     def __str__(self):
         return str(self.name)
+    
 
 class Category(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
@@ -19,54 +17,51 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
+
 class Produit(models.Model):
     categorie = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)
     name = models.CharField(max_length=100, null=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField( max_digits=10, decimal_places=2)
     digital = models.BooleanField(default=False, null=True, blank=True)
-    quantite = models.IntegerField(default=0)
-    date_ajout = models.DateTimeField(default=timezone.now)
-
-    class Meta:
-        ordering = ['-date_ajout']
+    nombre = models.IntegerField(default=0)
+    date_ajout = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.name           
-
+        return self.name
+    
+    class Meta:
+        ordering = ['-date_ajout']
+    
 
 class Commande(models.Model):
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, blank=True, null=True)
     date_commande = models.DateTimeField(auto_now_add=True)
     complete = models.BooleanField(default=False, null=True, blank=True)
-    transaction_id = models.CharField(max_length=200, null=True) 
+    transaction_id = models.CharField(max_length=200, null=True, blank=True)
     status = models.CharField(max_length=200, null=True, blank=True)
     total_trans = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
-        return str(self.id)  
-
+        return str(self.date_commande)
+    
     @property
-    def produit_physique(self):
-        """ savoir si nous avons au moins un produit physique"""
-        articlecommande = self.commandearticle_set.all()
-        physique = any(article.produit.digital==False for article in articlecommande)
-        return physique
-        
-
-    @property 
     def get_panier_total(self):
-        """ prix total des articles dans le panier"""
-        articlecommande = self.commandearticle_set.all()
-        total = sum([article.get_total for article in articlecommande])
-        return total  
-
+        articles = self.commandearticle_set.all()
+        total = sum([article.get_total for article in articles])
+        return total
+    
     @property
     def get_panier_article(self):
-        """ Nombre total des articles dans le panier"""
-        articlecommande = self.commandearticle_set.all()
-        quantite_total = sum([article.quantite for article in articlecommande])
-        return quantite_total
-
+        artices = self.commandearticle_set.all()
+        total = sum([article.quantite for article in artices])
+        return total
+    
+    @property
+    def produit_physique(self):
+        articles = self.commandearticle_set.all()
+        au_moins_un_produit_physique = any(article.produit.digital==False for article in articles)
+        return au_moins_un_produit_physique
 
 
 class CommandeArticle(models.Model):
@@ -77,7 +72,7 @@ class CommandeArticle(models.Model):
 
     @property
     def get_total(self):
-        total = self.quantite * self.produit.price
+        total = self.produit.price * self.quantite
         return total
 
 
@@ -87,11 +82,7 @@ class AddressChipping(models.Model):
     addresse = models.CharField(max_length=100, null=True)
     ville = models.CharField(max_length=100, null=True)
     zipcode = models.CharField(max_length=100, null=True)
-    date_ajout =  models.DateTimeField(auto_now_add=True)
-
+    date_ajout = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.addresse
-
-
-    

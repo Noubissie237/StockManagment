@@ -5,23 +5,56 @@
 
 {% block content %}
 
-<div class="row">
+<div class="col-12" style="margin-top: 15vh">
+    <h1 class="text-center text-info">Médicaments</h1>
+    <div class="card top-selling overflow-auto mt-5">
+        <div class="card-body pb-0">
+            <table class="table table-borderless">
+                <thead>
+                    <tr>
+                        <th scope="col"><h3></h3></th>
+                        <th scope="col"><h3>Nom du médicament</h3></th>
+                        <th scope="col"><h3>Quantité</h3></th>
+                        <th scope="col"><h3>Prix unitaire</h3></th>
+                        <th scope="col"><h3>Action</h3></th>
+                    </tr>
+                </thead>
+                <tbody>
 
-    {% for produit in produits  %}
 
-    <div class="col-lg-4">
-        <img class="thumbnail" src="{% static 'images/medoc.jpg' %}" alt="images">
-        <div class="box-element product">
-            <h6>{{produit.name}}</h6>
-            <hr>
-            <button class="btn btn-outline-secondary update-panier" data-produit="{{produit.id}}" data-action="add">
-                Ajouter au panier
-            </button>
-            <a href="#" class="btn btn-outline-success">Voir</a>
-            <h3 style="float: right;">{{produit.price}} XAF</h3>
+                    {% for produit in produits %}
+                    <tr class="userLine">
+                        <th scope="row">
+                            <a href="#"><img src="{% static 'images/med.png' %}" width="55" /></a>
+                        </th>
+                        <td>
+                            <h5 class="text-success fw-bold">
+                                {{produit.name}}
+                            </h5>
+                        </td>
+                        <td >
+                            {{produit.nombre}}
+                        </td>
+                        <td>
+                            <h5 >
+                                {{produit.price}} XAF
+                            </h5>
+                        </td>
+                        <td>
+                            <button class="btn btn-outline-secondary update-panier" data-produit="{{produit.id}}"
+                                data-action="add">
+                                Ajouter au panier
+                            </button>
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 
-    {% endfor %}
+
 
 {% endblock content %}
