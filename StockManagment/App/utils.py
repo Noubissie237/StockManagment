@@ -1,5 +1,6 @@
 from .models import *
-import json
+import json, requests, random, string
+from django.contrib.auth.models import User
 
 def panier_cookie(request):
     articles = []
@@ -81,3 +82,42 @@ def data_cookie(request):
     }
 
     return context
+
+
+def getDataFromApi(request):
+    try:
+        url = "http://localhost:8000/api/prescriptions/"
+
+        response = requests.get(url)
+        
+        dataToSave = response.json()
+
+        for elt in dataToSave:
+
+            if not User.objects.filter(username=elt['email']).exists():
+
+                user = User.objects.create_user(username=elt['email'], email=elt['email'], password=elt['Token'])
+                
+            if Prescription.objects.filter(email=elt['email']).exists():
+                pass
+            else:
+                tmp = Prescription(nom=elt['nom'], prenom=elt['prenom'], age=elt['age'], sexe=elt['sexe'], email=elt['email'],
+                                    antecedent=elt['antecedent'], prescription1=elt['prescription1'], prescription2=elt['prescription2'], 
+                                    prescription3=elt['prescription3'])
+                tmp.save()
+
+        
+        return "SUCCESS"
+    
+    except:
+        return "FAILED"
+
+
+def generer_mot_de_passe():
+
+    caracteres = string.ascii_letters + string.digits
+
+    mot_de_passe = ''.join(random.choice(caracteres) for _ in range(8))
+
+    return mot_de_passe
+

@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
-import json
+from django.http import JsonResponse, HttpResponse
+import json, requests
 from .models import *
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
-from .utils import panier_cookie, data_cookie
+from .utils import panier_cookie, data_cookie, getDataFromApi
 from .forms import LoginForm
 from django.contrib.auth import authenticate, login, logout
 
@@ -24,6 +24,7 @@ def shop(request, *args, **kwargs):
         'produits': produits,
         'nombre_article': nombre_article
     }
+
 
     return render(request, 'shop/index.html', context)
 
@@ -166,14 +167,19 @@ def login_view(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                return render(request, 'shop/panier.html', context={'name' : request.user.username})
+                return render(request, 'shop/index.html', context={'name' : request.user.username})
             else:
                 form.add_error(None, "Nom d'utilisateur ou mot de passe incorrect.")
     else:
+
+        res = getDataFromApi(request)
+        print(res)
         form = LoginForm()
+        
     return render(request, 'registration/login.html', {'form': form})
 
 
 def logout_view(request):
     logout(request)
     return redirect('/login')
+
