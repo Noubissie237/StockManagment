@@ -97,6 +97,9 @@ def getDataFromApi(request):
             if not User.objects.filter(username=elt['email']).exists():
 
                 user = User.objects.create_user(username=elt['email'], email=elt['email'], password=elt['Token'])
+
+                user.save()
+
                 
             if Prescription.objects.filter(email=elt['email']).exists():
                 pass
@@ -106,7 +109,16 @@ def getDataFromApi(request):
                                     prescription3=elt['prescription3'])
                 tmp.save()
 
-        
+            try:
+                user = User.objects.get(username=elt['email'])
+
+                client = Client.objects.create(user=user, name=elt["nom"], email=elt['email'])
+
+                print("valid")
+
+            except:
+                print('invalid')
+
         return "SUCCESS"
     
     except:
