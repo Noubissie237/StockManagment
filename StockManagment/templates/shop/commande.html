@@ -47,8 +47,9 @@
         </div>
         <br>
         <div class="box-element hidden" id="payment-info">
-            <small> Option Paypal </small>
-            <button class="btn w-100 btn-success btn-block" id="make-payment">Effectuer le paiement</button>
+            <small> Veillez choissir le Mode de paiement </small>
+            <div id="paypal-button-container"></div>
+            <!-- <button class="btn w-100 btn-success btn-block" id="make-payment">Effectuer le paiement</button> -->
         </div>
     </div>
 
@@ -75,6 +76,52 @@
         </div>
     </div>
 </div>
+
+ <!-- Include the PayPal JavaScript SDK -->
+
+ <script src="https://www.paypal.com/sdk/js?client-id=ASVRGd3Wlqjux-78D4CiRJS3RztTg1iMCXnTZS1knAlV96NGJhE-cdr28f9ePm01GpZUA1lJIzdyLsCP&currency=USD"></script>
+
+ <script>
+    var total = parseFloat('{{commande.get_panier_total}}').toFixed(2);
+    // Render the PayPal button into #paypal-button-container   
+    paypal.Buttons({
+        
+        style:{
+           color: 'blue',
+           shape: 'rect',
+        },
+        // Set up the transaction
+        createOrder: function(data, actions) {
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value: total
+                    }
+                }]
+            });
+        },
+
+        // Finalize the transaction
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(function(orderData) {
+                // Successful capture! For demo purposes:
+                console.log('Capture result', orderData, JSON.stringify(orderData, null, 2));
+                var transaction = orderData.purchase_units[0].payments.captures[0];
+
+                submitFormData(transaction.id, transaction.status);
+
+                // Replace the above to show a success message within this page, e.g.
+                // const element = document.getElementById('paypal-button-container');
+                // element.innerHTML = '';
+                // element.innerHTML = '<h3>Thank you for your payment!</h3>';
+                // Or go to another URL:  actions.redirect('thank_you.html');
+            });
+        }
+
+
+    }).render('#paypal-button-container');
+</script>
+
 
 <script type="text/javascript">
 
@@ -103,11 +150,18 @@
         document.getElementById('payment-info').classList.remove('hidden');
     })
 
-    document.getElementById('make-payment').addEventListener('click', function (e) {
-        submitFormData();
-    })
+    //document.getElementById('make-payment').addEventListener('click', function (e) {
+    //    submitFormData();
+    //})
 
-    function submitFormData() {
+    function submitFormData(transaction_id, status) {
+
+        var paymentInfo = {
+            'transaction_id': transaction_id,
+            'status': status,
+            'total' : total
+        }
+
         var userFormData = {
             'name': null,
             'username': null,
@@ -143,7 +197,7 @@
                 "Content-Type": "application/json",
                 "X-CSRFToken": csrftoken
             },
-            body:JSON.stringify({"form": userFormData, "shipping": shippingUserInfo})
+            body:JSON.stringify({"form": userFormData, "shipping": shippingUserInfo, "payment_info": paymentInfo})
         })
 
         .then((response) => {

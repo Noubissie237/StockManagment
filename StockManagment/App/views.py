@@ -139,10 +139,18 @@ def traitement_commande(request, *args, **kwargs):
 
     total = float(data['form']['total'])
 
-    commande.transaction_id = transaction_id
+    commande.transaction_id = data["payment_info"]["transaction_id"]
+
+    commande.total_trans = data['payment_info']['total']
 
     if commande.get_panier_total == total:
         commande.complete = True
+        commande.status = data['payment_info']['status']
+
+    else:
+        commande.status = "REFUSED"
+        commande.save()
+        return JsonResponse("Attention!!! Traitement Refuse Fraude detecte!", safe=False)
 
     commande.save()
 
