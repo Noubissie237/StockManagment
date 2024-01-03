@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  web:
+    build: 
+      context: .
+    ports:
+      - "8002:8002"
+    command: ["sh", "./start.sh"]
+    volumes:
+      - .:/app
