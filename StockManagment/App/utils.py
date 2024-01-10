@@ -86,7 +86,7 @@ def data_cookie(request):
 
 def getDataFromApi(request):
     try:
-        url = "http://localhost:8000/api/prescriptions/"
+        url = "http://gestionpersonnel:8000/api/prescriptions/"
 
         response = requests.get(url)
         
