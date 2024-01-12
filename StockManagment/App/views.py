@@ -32,9 +32,11 @@ def shop(request, *args, **kwargs):
 def panier(request, *args, **kwargs):
 
     data = data_cookie(request)
+    print(data)
     articles = data['articles']
     commande = data['commande']
     nombre_article = data['nombre_article']
+    print(nombre_article)
 
 
     context = {
